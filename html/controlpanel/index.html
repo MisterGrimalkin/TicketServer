@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>LightBoard Control Panel</title>
+</head>
+<script src="lightboard-controller.js"></script>
+<script>
+    window.onload=function() {
+        onLoad();
+    }
+</script>
+</head>
+
+<body>
+
+    <div class="jumbotron">
+        <h1>LightBoard Control Panel</h1>
+    </div>
+
+    <div class="container-fluid">
+        <h2>Available LightBoards</h2>
+        <div id="boardList" style="float:left;"></div>
+        <button type="button" class="btn-primary" style="float:right; margin: 5px;" onclick="scan()">Rescan</button>
+    </div>
+
+    <div id="boardDetail" class="container-fluid" style="visibility: hidden;">
+
+        <div style="width:50%; float:left;">
+            <div class="container-fluid">
+                <h2>Scenes</h2>
+                <div style="float:right; margin-bottom: 10px;">
+                    Cycle Scenes &nbsp;
+                    <input id="cycleMode" type="checkbox" style="float:right;" onchange="sendCycleMode()">
+                </div>
+                <div id="sceneList"></div>
+                <div style="float:left; margin-bottom: 10px;">
+                    &nbsp;Track Current Scene
+                    <input id="trackScene" type="checkbox" style="float:left;" onchange="changeTrackScene()">
+                </div>
+            </div>
+        </div>
+
+        <div style="width:50%; float:left;">
+            <div class="container-fluid">
+                <h2>LED Colour</h2>
+                <div id="colourList"></div>
+            </div>
+        </div>
+
+        <div style="width:50%; float:left; clear:left;">
+            <div class="container-fluid">
+                <h2>Post Message</h2>
+                <p>
+                    <input id="messageText" type="text" style="width: 100%;"/>
+                </p>
+                <p>
+                    <button type="button" onclick="postMessage()" class="btn-primary" style="width: 50%; float: left;">Post</button>
+                    <button type="button" onclick="postMessageToAll()" class="btn-primary" style="width: 50%; float:left;">Post To All</button>
+                </p>
+            </div>
+        </div>
+
+        <div style="width:50%; float:left;">
+            <div class="container-fluid">
+                <h2>Control</h2>
+                <div id="boardIP"></div>
+                <p></p>
+                <button type="button" onclick="wake()" class="btn-warning" style="width: 45%; float: left;">Wake</button>
+                <button type="button" onclick="sleep()" class="btn-warning" style="width: 45%; float: right;">Sleep</button>
+                <button type="button" onclick="shutdown()" class="btn-warning" style="width: 100%; margin-top: 10px;">SHUTDOWN</button>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
