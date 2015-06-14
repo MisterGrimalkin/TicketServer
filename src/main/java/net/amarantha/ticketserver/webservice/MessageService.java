@@ -1,7 +1,9 @@
 package net.amarantha.ticketserver.webservice;
 
+import net.amarantha.ticketserver.entity.MessageBundle;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -13,6 +15,7 @@ import java.util.Map;
 public class MessageService {
 
     private static Map<Integer, String> messages = new HashMap<Integer, String>();
+    private static MessageBundle.Wrapper wrapper = new MessageBundle.Wrapper();
 
     private static int id = 0;
 
@@ -30,7 +33,10 @@ public class MessageService {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
     public static Response postMessage(String message) {
-        messages.put(id++, message);
+
+
+
+
         return Response.ok()
                 .header("Access-Control-Allow-Origin", "*")
                 .entity("New Message: " + (id - 1))
@@ -38,7 +44,7 @@ public class MessageService {
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public static Response getMessages() {
         JSONObject json = new JSONObject();
         JSONArray ja = new JSONArray();

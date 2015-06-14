@@ -23,7 +23,7 @@ public class Main {
         server = null;
         if ( ip!=null ) {
             System.out.println("Starting Web Service....");
-            String fullUri = "http://"+ip+":8002";
+            String fullUri = "http://"+ip+":8002/ticketserver";
             final ResourceConfig rc = new ResourceConfig().packages("net.amarantha.ticketserver.webservice");
             rc.register(LoggingFilter.class);
             server = GrizzlyHttpServerFactory.createHttpServer(URI.create(fullUri), rc);

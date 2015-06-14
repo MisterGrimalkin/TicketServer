@@ -52,6 +52,7 @@ function pingLightBoard(ipLSB) {
             btn.className = "btn-primary";
             btn.style.clear = "left";
             btn.style.margin = "5px";
+            btn.style.height = "40px";
             btn.onclick = createLoadBoardFunction(ipLSB, caption);
             btn.appendChild(t);
 
@@ -123,11 +124,13 @@ function loadScenes() {
                     btn.appendChild(t);
                     btn.className = "btn-primary";
                     btn.style.width = "90%";
+                    btn.style.height = "40px";
                     btn.onclick = createLoadSceneFunction(scene.sceneId);
 
                     var c = document.createElement("INPUT");
                     c.type="checkbox";
                     c.style.float = "right";
+                    c.style.margin = "12px 0 0 0";
 
                     var p = document.createElement("P");
                     p.appendChild(btn);
@@ -246,6 +249,7 @@ function loadColours() {
                     var btn = document.createElement("BUTTON");
                     btn.className = "btn-primary";
                     btn.style.width = "100%";
+                    btn.style.height = "40px";
                     btn.style.background = colour.name;
                     btn.onclick = createChangeColourFunction(colour.name);
 

@@ -27,6 +27,13 @@
 
     <dependencies>
 
+        <!-- Sync HTTP Calls -->
+        <dependency>
+            <groupId>org.javalite</groupId>
+            <artifactId>javalite-common</artifactId>
+            <version>1.4.10</version>
+        </dependency>
+
         <!-- JSON -->
         <dependency>
             <groupId>net.sf.json-lib</groupId>
