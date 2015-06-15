@@ -11,7 +11,7 @@ import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 
-@Path("messages")
+//@Path("messages")
 public class MessageService {
 
     private static Map<Integer, String> messages = new HashMap<Integer, String>();
@@ -19,8 +19,8 @@ public class MessageService {
 
     private static int id = 0;
 
-    @DELETE
-    @Produces(MediaType.TEXT_PLAIN)
+//    @DELETE
+//    @Produces(MediaType.TEXT_PLAIN)
     public static Response deleteMessage(@QueryParam("id") int id) {
         messages.remove(id);
         return Response.ok()
@@ -29,9 +29,9 @@ public class MessageService {
                 .build();
     }
 
-    @POST
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.TEXT_PLAIN)
+//    @POST
+//    @Consumes(MediaType.TEXT_PLAIN)
+//    @Produces(MediaType.TEXT_PLAIN)
     public static Response postMessage(String message) {
 
 
@@ -43,8 +43,8 @@ public class MessageService {
                 .build();
     }
 
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
+//    @GET
+//    @Produces(MediaType.TEXT_PLAIN)
     public static Response getMessages() {
         JSONObject json = new JSONObject();
         JSONArray ja = new JSONArray();

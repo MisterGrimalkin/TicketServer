@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Shower Tickets</title>
+</head>
+<script src="../server-controller.js"></script>
+<script src="shower-controller.js"></script>
+<script>
+    window.onload=function() {
+        onLoad(function() { loadTickets(); });
+    }
+</script>
+</head>
+
+<body>
+
+<div class="jumbotron">
+    <h1>Shower Controller</h1>
+</div>
+
+
+<div id="detailPanel" class="container-fluid" style="visibility: hidden;">
+
+    <div style="width:50%; float:left;">
+        <div class="container-fluid" style="text-align: center;">
+            <h1 style="font-weight: bold;">FEMALE</h1>
+            <div id="femaleTicket" onclick="userInputTicketNumber('female')" style="font-size:50px; background: #232; font-weight: bold; color: white; width: 200px; margin: auto;"></div>
+            <button type="BUTTON" class="btn-primary" style="margin: 10px; width: 200px; height: 40px;" onclick="nextTicket('female')">NEXT</button>
+        </div>
+    </div>
+
+    <div style="width:50%; float:left;" >
+        <div class="container-fluid" style="text-align: center;">
+            <h1 style="font-weight: bold;">MALE</h1>
+            <div id="maleTicket" onclick="userInputTicketNumber('male')" style="font-size:50px; background: #232; font-weight: bold; color: white; width: 200px; margin: auto;"></div>
+            <button type="BUTTON" class="btn-primary" style="margin: 10px; width: 200px; height: 40px;" onclick="nextTicket('male')">NEXT</button>
+        </div>
+    </div>
+
+    <!--<div style="width:100%; float:left;">-->
+    <!--<div class="container-fluid">-->
+    <!--<h2>Broadcast Message</h2>-->
+    <!--&lt;!&ndash;<div id="colourList"></div>&ndash;&gt;-->
+    <!--</div>-->
+    <!--</div>-->
+
+</div>
+
+<div class="container-fluid">
+    <div id="ipAddress" style="text-align: center;"></div>
+</div>
+
+</body>
+
+</html>

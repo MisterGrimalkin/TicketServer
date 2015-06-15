@@ -1,34 +1,41 @@
 package net.amarantha.ticketserver.entity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MessageBundle {
 
-    private int bundleId;
+    private int id;
     private String name;
     private int maxMessages;
     private String defaultColour;
-    private List<Message> messages;
+    private Map<String, String> messages;
 
     public MessageBundle() {
-        messages = new ArrayList<>();
+        this(0);
     }
 
-    public MessageBundle(int bundleId, String name, int maxMessages, String defaultColour) {
-        this();
-        this.bundleId = bundleId;
+    public MessageBundle(int id) {
+        messages = new HashMap<>();
+        this.id = id;
+
+    }
+
+    public MessageBundle(int id, String name, int maxMessages, String defaultColour) {
+        this(id);
         this.name = name;
         this.maxMessages = maxMessages;
         this.defaultColour = defaultColour;
     }
 
-    public int getBundleId() {
-        return bundleId;
+    public int getId() {
+        return id;
     }
 
-    public void setBundleId(int bundleId) {
-        this.bundleId = bundleId;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -55,55 +62,17 @@ public class MessageBundle {
         this.defaultColour = defaultColour;
     }
 
-    public List<Message> getMessages() {
+    public Map<String, String> getMessages() {
         return messages;
     }
 
-    public List<String> getMessagesText() {
-        List<String> result = new ArrayList<>();
-        for ( Message m : messages ) {
-            result.add(m.getMessage());
-        }
-        return result;
-    }
-
-    public void setMessages(List<Message> messages) {
+    public void setMessages(Map<String, String> messages) {
         this.messages = messages;
     }
 
-    public MessageBundle addMessage(int id, String message) {
-        messages.add(new Message(id, message));
+    public MessageBundle addMessage(String id, String message) {
+        messages.put(id, message);
         return this;
-    }
-
-    public static class Message {
-
-        private int id;
-        private String message;
-
-        public Message() {}
-
-        public Message(int id, String message) {
-            this.id = id;
-            this.message = message;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public void setId(int id) {
-            this.id = id;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
-
     }
 
 
@@ -117,6 +86,15 @@ public class MessageBundle {
 
         public List<MessageBundle> getBundles() {
             return bundles;
+        }
+
+        public MessageBundle getBundle(int id) {
+            for ( MessageBundle bundle : bundles ) {
+                if ( bundle.getId()==id ) {
+                    return bundle;
+                }
+            }
+            return null;
         }
 
         public void setBundles(List<MessageBundle> bundles) {

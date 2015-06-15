@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>LightBoard Messages</title>
+</head>
+<script src="../server-controller.js"></script>
+<script>
+    window.onload=function() {
+        onLoad(function() { loadMessages(); });
+    }
+</script>
+</head>
+
+<body>
+
+    <div class="jumbotron">
+        <h1>LightBoard Messages</h1>
+    </div>
+
+
+    <div id="detailPanel" class="container-fluid" style="visibility: hidden;">
+
+        <div style="width:100%; float:left;">
+            <div class="container-fluid">
+                <div id="messageSets"></div>
+            </div>
+        </div>
+
+        <!--<div style="width:100%; float:left;">-->
+            <!--<div class="container-fluid">-->
+                <!--<h2>Broadcast Message</h2>-->
+                <!--&lt;!&ndash;<div id="colourList"></div>&ndash;&gt;-->
+            <!--</div>-->
+        <!--</div>-->
+
+    </div>
+
+    <div class="container-fluid">
+        <div id="ipAddress" style="text-align: center;"></div>
+    </div>
+
+</body>
+
+</html>
