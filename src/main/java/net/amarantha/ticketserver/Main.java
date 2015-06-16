@@ -8,7 +8,11 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,7 +23,9 @@ public class Main {
 
     public static void main(String[] args) {
 
-        startWebService("192.168.0.17");
+        loadConfig();
+
+        startWebService(ip);
 
         loadMessages();
         loadTicketNumbers();
@@ -56,5 +62,24 @@ public class Main {
             server.shutdown();
         }
     }
+
+    private static String ip = null;
+
+    public static void loadConfig() {
+        try {
+            String message = "TicketServer configuration: ";
+            Properties prop = new Properties();
+            InputStream is = new FileInputStream("ticketserver.properties");
+            prop.load(is);
+            if ( prop.getProperty("ip")!=null ) {
+                ip = prop.getProperty("ip");
+                message += " Serving on " + ip;
+            }
+            System.out.println(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }
