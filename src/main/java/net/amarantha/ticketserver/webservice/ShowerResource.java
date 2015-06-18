@@ -4,10 +4,8 @@ import net.sf.json.JSONObject;
 import org.javalite.http.Http;
 import org.javalite.http.Post;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.io.FileNotFoundException;
@@ -55,6 +53,7 @@ public class ShowerResource {
     }
 
     @GET
+    @Produces(MediaType.TEXT_PLAIN)
     @Path("female")
     public static Response getFemaleTicket() {
         return Response.ok()
@@ -82,6 +81,7 @@ public class ShowerResource {
 
     @GET
     @Path("male")
+    @Produces(MediaType.TEXT_PLAIN)
     public static Response getMaleTicket() {
         return Response.ok()
                 .header("Access-Control-Allow-Origin", "*")

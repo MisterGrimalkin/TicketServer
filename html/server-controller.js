@@ -93,9 +93,22 @@ function loadMessages() {
 
                 putMessages(bundle.id, bundle.name, bundle.messages);
             }
+//            loadBroadcastMessage();
         }
     }
     req.open("GET", "http://"+baseUrl+":8002/ticketserver/messages", true);
+    req.send();
+}
+
+function loadBroadcastMessage() {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+        if ( req.readyState==4 && req.status==200 ) {
+        window.alert(req.responseText);
+            var json = JSON.parse(req.responseText);
+        }
+    }
+    req.open("GET", "http://"+baseUrl+":8002/broadcast", true);
     req.send();
 }
 
@@ -206,7 +219,14 @@ function createUpdateMessageFunction(setId, messageId) {
         var req = new XMLHttpRequest();
         req.onreadystatechange = function() {
             if ( req.readyState==4 ) {
-                loadMessages();
+                if ( req.responseCode!=200 ) {
+                    window.alert("Error " + req/responseCode + ": " + req.responseText);
+                } else {
+                    loadMessages();
+                }
+            } else
+            if (req.readyState > 1 && req.status != 200 && req.status != 304) {
+                window.alert("Server responded with an error - please contact support.");
             }
         }
         req.open("POST", "http://"+baseUrl+":8002/ticketserver/update-message?setId="+setId+"&msgId="+messageId+"&text="+text, true);
@@ -227,9 +247,25 @@ function createRemoveMessageFunction(setId, messageId) {
     }
 }
 
-function saveMessages() {
-
-    var jsonData = {};
-
-
+function beginBroadcast() {
+    var text = document.getElementById("broadcastMessageText").value;
+    var interval = parseInt(document.getElementById("broadcastMessageInterval").value);
+    if ( text!=="" ) {
+        var url = "http://"+baseUrl+":8002/ticketserver/broadcast";
+        if ( !isNaN(interval) ) {
+            url += "?interval="+interval;
+        }
+        var req = new XMLHttpRequest();
+        req.open("POST", url, true);
+        req.send(text);
+    }
 }
+
+function cancelBroadcast() {
+    document.getElementById("broadcastMessageText").value = "";
+    document.getElementById("broadcastMessageInterval").value = "";
+    var req = new XMLHttpRequest();
+    req.open("POST", "http://"+baseUrl+":8002/ticketserver/cancel-broadcast", true);
+    req.send();
+}
+

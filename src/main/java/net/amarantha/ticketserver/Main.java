@@ -1,7 +1,5 @@
 package net.amarantha.ticketserver;
 
-import net.amarantha.ticketserver.webservice.RegistrationResource;
-import net.amarantha.ticketserver.webservice.ShowerResource;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -33,8 +31,12 @@ public class Main {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                pushMessagesToAllLightBoards();
-                pushTicketsToAllLightBoards();
+                try {
+                    pushMessagesToAllLightBoards();
+                    pushTicketsToAllLightBoards();
+                } catch ( Exception e ) {
+                    System.out.println(e.getMessage());
+                }
             }
         }, 0, 60000);
 
@@ -50,7 +52,7 @@ public class Main {
             System.out.println("Starting Web Service....");
             String fullUri = "http://"+ip+":8002/ticketserver";
             final ResourceConfig rc = new ResourceConfig().packages("net.amarantha.ticketserver.webservice");
-            rc.register(LoggingFilter.class);
+//            rc.register(LoggingFilter.class);
             server = GrizzlyHttpServerFactory.createHttpServer(URI.create(fullUri), rc);
             System.out.println("Web Service Online @ " + fullUri);
         }

@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../bootstrap.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>LightBoard Messages</title>
@@ -28,15 +28,17 @@
         <div style="width:100%; float:left;">
             <div class="container-fluid">
                 <div id="messageSets"></div>
+                <h2>Broadcast Message</h2>
+                Send Message:<p>
+                <textarea id="broadcastMessageText" rows="3" cols="60"></textarea>
+                <p>
+                every
+                <input id="broadcastMessageInterval" type="TEXT" style="width: 30px;"/>
+                seconds
+                <button type="BUTTON" class="btn-success" onclick="beginBroadcast()">Start</button>
+                <button type="BUTTON" class="btn-danger" onclick="cancelBroadcast()">Cancel</button>
             </div>
         </div>
-
-        <!--<div style="width:100%; float:left;">-->
-            <!--<div class="container-fluid">-->
-                <!--<h2>Broadcast Message</h2>-->
-                <!--&lt;!&ndash;<div id="colourList"></div>&ndash;&gt;-->
-            <!--</div>-->
-        <!--</div>-->
 
     </div>
 

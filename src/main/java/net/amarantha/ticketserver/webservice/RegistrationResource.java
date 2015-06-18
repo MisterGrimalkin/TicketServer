@@ -71,13 +71,20 @@ public class RegistrationResource {
         MessageBundle bundle = wrapper.getBundle(set);
         if ( bundle!=null ) {
             bundle.addMessage(UUID.randomUUID().toString(), text);
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    saveMessages();
-                    pushMessagesToAllLightBoards();
-                }
-            }, 2000);
+            try {
+//            new Timer().schedule(new TimerTask() {
+//                @Override
+//                public void run() {
+                saveMessages();
+                pushMessagesToAllLightBoards();
+//                }
+//            }, 2000);
+            } catch ( Exception e ) {
+                return Response.serverError()
+                        .header("Access-Control-Allow-Origin", "*")
+                        .entity(e.getMessage())
+                        .build();
+            }
             return Response.ok()
                     .header("Access-Control-Allow-Origin", "*")
                     .entity("Message Deleted")
@@ -98,13 +105,20 @@ public class RegistrationResource {
             if ( message!=null ) {
                 bundle.getMessages().remove(msg);
                 bundle.getMessages().put(msg, text);
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        saveMessages();
-                        pushMessagesToAllLightBoards();
-                    }
-                }, 2000);
+                try {
+//                new Timer().schedule(new TimerTask() {
+//                    @Override
+//                    public void run() {
+                    saveMessages();
+                    pushMessagesToAllLightBoards();
+//                    }
+//                }, 2000);
+                } catch ( Exception e ) {
+                    return Response.serverError()
+                            .header("Access-Control-Allow-Origin", "*")
+                            .entity(e.getMessage())
+                            .build();
+                }
                 return Response.ok()
                         .header("Access-Control-Allow-Origin", "*")
                         .entity("Message Deleted")
@@ -123,13 +137,20 @@ public class RegistrationResource {
         MessageBundle bundle = wrapper.getBundle(set);
         if ( bundle!=null ) {
             if ( bundle.getMessages().remove(msg)!=null ) {
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        saveMessages();
-                        pushMessagesToAllLightBoards();
-                    }
-                }, 2000);
+                try {
+//                new Timer().schedule(new TimerTask() {
+//                    @Override
+//                    public void run() {
+                    saveMessages();
+                    pushMessagesToAllLightBoards();
+//                    }
+//                }, 2000);
+                } catch ( Exception e ) {
+                    return Response.serverError()
+                            .header("Access-Control-Allow-Origin", "*")
+                            .entity("Message Deleted")
+                            .build();
+                }
                 return Response.ok()
                         .header("Access-Control-Allow-Origin", "*")
                         .entity("Message Deleted")
@@ -142,34 +163,7 @@ public class RegistrationResource {
                 .build();
     }
 
-//    @POST
-//    @Path("message")
-//    public static Response setupMessages() {
-//        wrapper = new MessageBundle.Wrapper();
-//
-//        wrapper
-//                .addBundle(
-//                        new MessageBundle(1, "Admin", 1, "red")
-//                                .addMessage("1", "Please Collect A Ticket From The Shower Steward")
-//                                .addMessage("2", "If Your Number Has Already Been Called You Can Still Use It")
-//                                .addMessage("3", "Another Shower Is Possible")
-//                )
-//                .addBundle(
-//                        new MessageBundle(2, "User", 2, "green")
-//                                .addMessage("1", "Awesome bands on tonight")
-//                                .addMessage("2", "Isn't this great?")
-//                                .addMessage("3", "Some Other Stuff")
-//                                .addMessage("4", "And We Have Things to Tell you")
-//                                .addMessage("5", "I need some breakfast")
-//                );
-//
-//        return Response.ok()
-//                .header("Access-Control-Allow-Origin", "*")
-//                .entity("Messages Added")
-//                .build();
-//    }
-
-    public static void pushMessagesToAllLightBoards() {
+    public static void pushMessagesToAllLightBoards() throws Exception {
         JSONObject json = JSONObject.fromObject(wrapper);
         for ( String ip : lightboardIps ) {
             try {
@@ -177,10 +171,10 @@ public class RegistrationResource {
                 if ( post.responseCode()==200 ) {
                     System.out.println("LightBoard @ " + ip + " OK\n");
                 } else {
-                    System.out.println("LightBoard @ " + ip + " FAILED!\n");
+                    throw new Exception();
                 }
             } catch ( Exception e ) {
-                System.out.println("LightBoard @ " + ip + " DID NOT RESPOND!\n");
+                throw new Exception("Error contacting LightBoard at 192.168.0." + ip);
             }
         }
     }
@@ -189,11 +183,16 @@ public class RegistrationResource {
 
     private static Timer broadcastTimer;
 
+    private static String broadcastMessage;
+    private static Integer broadcastInterval;
+
     @POST
     @Path("broadcast")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
     public static Response broadcastMessage(final String message, @QueryParam("interval") Integer interval) {
+        broadcastMessage = message;
+        broadcastInterval = interval;
         String resp;
         if ( interval==null ) {
             resp = "Broadcast Once\n" + broadcastToAllLightBoards(message);
@@ -253,10 +252,19 @@ public class RegistrationResource {
         return resp;
     }
 
-//    @POST
-//    public static Response setMessages(String messages) {
-//
-//    }
+    @GET
+    @Path("broadcast")
+    @Produces(MediaType.TEXT_PLAIN)
+    public static Response getBroadcastSettings() {
+        JSONObject json = new JSONObject();
+        json.put("text", broadcastMessage);
+        json.put("interval", broadcastInterval);
+        System.out.println(json.toString());
+        return Response.ok()
+                .header("Access-Control-Allow-Origin", "*")
+                .entity(json.toString())
+                .build();
+    }
 
     @POST
     @Path("register")
@@ -267,8 +275,12 @@ public class RegistrationResource {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                pushTicketsToAllLightBoards();
-                pushMessagesToAllLightBoards();
+                try {
+                    pushTicketsToAllLightBoards();
+                    pushMessagesToAllLightBoards();
+                } catch ( Exception e ) {
+                    System.out.println(e.getMessage());
+                }
             }
         }, 2000);
         return Response.ok()
