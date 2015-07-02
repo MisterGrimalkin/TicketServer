@@ -4,14 +4,15 @@
 
 <head>
     <link rel="stylesheet" href="../bootstrap.min.css">
+    <link rel="stylesheet" href="../ticketserver.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>LightBoard Messages</title>
+    <title>Messages</title>
 </head>
 <script src="../server-controller.js"></script>
 <script>
     window.onload=function() {
-        onLoad(function() { loadMessages(); });
+        scanForServer(function() { loadMessages(); });
     }
 </script>
 </head>
@@ -19,7 +20,7 @@
 <body>
 
     <div class="jumbotron">
-        <h1>LightBoard Messages</h1>
+        <h1>Messages</h1>
     </div>
 
 
@@ -29,14 +30,14 @@
             <div class="container-fluid">
                 <div id="messageSets"></div>
                 <h2>Broadcast Message</h2>
-                Send Message:<p>
-                <textarea id="broadcastMessageText" rows="3" cols="60"></textarea>
-                <p>
+                <textarea id="broadcastMessageText" rows="3" cols="60" style="margin: auto; width: 100%;border-radius: 5px;"></textarea>
+                <div style="float:right;">
                 every
                 <input id="broadcastMessageInterval" type="TEXT" style="width: 30px;"/>
                 seconds
                 <button type="BUTTON" class="btn-success" onclick="beginBroadcast()">Start</button>
                 <button type="BUTTON" class="btn-danger" onclick="cancelBroadcast()">Cancel</button>
+                </div>
             </div>
         </div>
 

@@ -1,268 +1,38 @@
 package net.amarantha.ticketserver.webservice;
 
-import net.amarantha.ticketserver.entity.MessageBundle;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.javalite.http.Get;
 import org.javalite.http.Http;
 import org.javalite.http.Post;
 
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import static net.amarantha.ticketserver.webservice.MessageResource.pushMessagesToAllLightBoards;
 import static net.amarantha.ticketserver.webservice.ShowerResource.pushTicketsToAllLightBoards;
 
 @Path("")
 public class RegistrationResource {
 
-    private static final String filename = "messages.json";
-
-    private static MessageBundle.Wrapper wrapper;
-
-    public static void loadMessages() {
-        try {
-            String jsonString = new String(Files.readAllBytes(Paths.get(filename)));
-            JSONObject json = JSONObject.fromObject(jsonString);
-            JSONArray ja = json.getJSONArray("bundles");
-            wrapper = new MessageBundle.Wrapper();
-            Iterator<JSONObject> iter = ja.iterator();
-            while ( iter.hasNext() ) {
-                JSONObject obj = iter.next();
-                MessageBundle bundle = (MessageBundle)JSONObject.toBean(obj, MessageBundle.class);
-                wrapper.addBundle(bundle);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public static void saveMessages() {
-        try {
-            JSONObject json = JSONObject.fromObject(wrapper);
-            FileWriter writer = new FileWriter(filename);
-            writer.write(json.toString());
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @GET
-    @Path("messages")
-    public static Response getMessages() {
-        JSONObject json = JSONObject.fromObject(wrapper);
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .entity(json.toString())
-                .build();
-    }
-
-    @POST
-    @Path("add-message")
-    public static Response addMessage(@QueryParam("setId") int set, @QueryParam("text") String text) {
-        MessageBundle bundle = wrapper.getBundle(set);
-        if ( bundle!=null ) {
-            bundle.addMessage(UUID.randomUUID().toString(), text);
-            try {
-//            new Timer().schedule(new TimerTask() {
-//                @Override
-//                public void run() {
-                saveMessages();
-                pushMessagesToAllLightBoards();
-//                }
-//            }, 2000);
-            } catch ( Exception e ) {
-                return Response.serverError()
-                        .header("Access-Control-Allow-Origin", "*")
-                        .entity(e.getMessage())
-                        .build();
-            }
-            return Response.ok()
-                    .header("Access-Control-Allow-Origin", "*")
-                    .entity("Message Deleted")
-                    .build();
-        }
-        return Response.serverError()
-                .header("Access-Control-Allow-Origin", "*")
-                .entity("Message Set Not Found")
-                .build();
-    }
-
-    @POST
-    @Path("update-message")
-    public static Response updateMessage(@QueryParam("setId") int set, @QueryParam("msgId") String msg, @QueryParam("text") String text) {
-        MessageBundle bundle = wrapper.getBundle(set);
-        if ( bundle!=null ) {
-            String message = bundle.getMessages().get(msg);
-            if ( message!=null ) {
-                bundle.getMessages().remove(msg);
-                bundle.getMessages().put(msg, text);
-                try {
-//                new Timer().schedule(new TimerTask() {
-//                    @Override
-//                    public void run() {
-                    saveMessages();
-                    pushMessagesToAllLightBoards();
-//                    }
-//                }, 2000);
-                } catch ( Exception e ) {
-                    return Response.serverError()
-                            .header("Access-Control-Allow-Origin", "*")
-                            .entity(e.getMessage())
-                            .build();
-                }
-                return Response.ok()
-                        .header("Access-Control-Allow-Origin", "*")
-                        .entity("Message Deleted")
-                        .build();
-            }
-        }
-        return Response.serverError()
-                .header("Access-Control-Allow-Origin", "*")
-                .entity("Message Not Found")
-                .build();
-    }
-
-    @POST
-    @Path("remove-message")
-    public static Response deleteMessage(@QueryParam("setId") int set, @QueryParam("msgId") String msg) {
-        MessageBundle bundle = wrapper.getBundle(set);
-        if ( bundle!=null ) {
-            if ( bundle.getMessages().remove(msg)!=null ) {
-                try {
-//                new Timer().schedule(new TimerTask() {
-//                    @Override
-//                    public void run() {
-                    saveMessages();
-                    pushMessagesToAllLightBoards();
-//                    }
-//                }, 2000);
-                } catch ( Exception e ) {
-                    return Response.serverError()
-                            .header("Access-Control-Allow-Origin", "*")
-                            .entity("Message Deleted")
-                            .build();
-                }
-                return Response.ok()
-                        .header("Access-Control-Allow-Origin", "*")
-                        .entity("Message Deleted")
-                        .build();
-            }
-        }
-        return Response.serverError()
-                .header("Access-Control-Allow-Origin", "*")
-                .entity("Message Not Found")
-                .build();
-    }
-
-    public static void pushMessagesToAllLightBoards() throws Exception {
-        JSONObject json = JSONObject.fromObject(wrapper);
-        for ( String ip : lightboardIps ) {
-            try {
-                Post post = Http.post("http://" + ip + ":8001/lightboard/messages", json.toString());
-                if ( post.responseCode()==200 ) {
-                    System.out.println("LightBoard @ " + ip + " OK\n");
-                } else {
-                    throw new Exception();
-                }
-            } catch ( Exception e ) {
-                throw new Exception("Error contacting LightBoard at 192.168.0." + ip);
-            }
-        }
-    }
-
     static Set<String> lightboardIps = new HashSet<>();
 
-    private static Timer broadcastTimer;
-
-    private static String broadcastMessage;
-    private static Integer broadcastInterval;
-
     @POST
-    @Path("broadcast")
-    @Consumes(MediaType.TEXT_PLAIN)
+    @Path("clear-registrations")
     @Produces(MediaType.TEXT_PLAIN)
-    public static Response broadcastMessage(final String message, @QueryParam("interval") Integer interval) {
-        broadcastMessage = message;
-        broadcastInterval = interval;
-        String resp;
-        if ( interval==null ) {
-            resp = "Broadcast Once\n" + broadcastToAllLightBoards(message);
-        } else {
-            resp = "Broadcast Every " + interval + " seconds\n";
-            if ( broadcastTimer!=null ) {
-                broadcastTimer.cancel();
-            }
-            broadcastTimer = new Timer();
-            broadcastTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    broadcastToAllLightBoards(message);
-                }
-            }, 0, interval*1000);
-        }
+    public static Response clearRegistrations() {
+        lightboardIps = new HashSet<>();
         return Response.ok()
                 .header("Access-Control-Allow-Origin", "*")
-                .entity(resp)
-                .build();
-    }
-
-    @POST
-    @Path("cancel-broadcast")
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.TEXT_PLAIN)
-    public static Response cancelBroadcast() {
-        if ( broadcastTimer!=null ) {
-            broadcastTimer.cancel();
-            broadcastTimer = null;
-            return Response.ok()
-                    .header("Access-Control-Allow-Origin", "*")
-                    .entity("Broadcast Message Cancelled")
-                    .build();
-        } else {
-            return Response.serverError()
-                    .header("Access-Control-Allow-Origin", "*")
-                    .entity("No Broadcast Message To Cancel")
-                    .build();
-        }
-    }
-
-    private static String broadcastToAllLightBoards(String message) {
-        String resp = "";
-        for ( String ip : lightboardIps ) {
-            try {
-                Post post = Http.post("http://" + ip + ":8001/lightboard/message", message);
-                if ( post.responseCode()==200 ) {
-                    resp += "LightBoard @ " + ip + " OK\n";
-                } else {
-                    resp += "LightBoard @ " + ip + " FAILED!\n";
-                }
-            } catch ( Exception e ) {
-                resp += "LightBoard @ " + ip + " DID NOT RESPOND!\n";
-            }
-        }
-        return resp;
-    }
-
-    @GET
-    @Path("broadcast")
-    @Produces(MediaType.TEXT_PLAIN)
-    public static Response getBroadcastSettings() {
-        JSONObject json = new JSONObject();
-        json.put("text", broadcastMessage);
-        json.put("interval", broadcastInterval);
-        System.out.println(json.toString());
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .entity(json.toString())
+                .entity("You are now registered")
                 .build();
     }
 
@@ -270,8 +40,8 @@ public class RegistrationResource {
     @Path("register")
     @Produces(MediaType.TEXT_PLAIN)
     public static Response registerLightBoard(final String ip) {
-        System.out.println("Registered " + ip);
         lightboardIps.add(ip);
+        System.out.println("Registered " + ip);
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
@@ -289,18 +59,88 @@ public class RegistrationResource {
                 .build();
     }
 
-    @GET
-    @Path("lightboards")
+    @POST
+    @Path("deregister")
+    public static Response deregisterLightBoard(final String ip) {
+        boolean removed = lightboardIps.remove(ip);
+        System.out.println("De-registered " + ip);
+        return Response.ok()
+                .header("Access-Control-Allow-Origin", "*")
+                .entity(removed ? "Board De-registered" : "Unknown Board")
+                .build();
+    }
+
+    @POST
+    @Path("shutdown")
     @Produces(MediaType.TEXT_PLAIN)
-    public static Response getLightBoards() {
-        String message = "";
-        for ( String s : lightboardIps) {
-            message += s + "\n";
+    public static Response shutdown() {
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.exit(0);
+            }
+        }, 1000);
+        for ( String ip : lightboardIps ) {
+            Post post = Http.post("http://" + ip + ":8001/lightboard/system/shutdown", "");
+            if (post.responseCode() != 200) {
+                String message = "Board " + ip + " could not be shut down.";
+            }
         }
         return Response.ok()
                 .header("Access-Control-Allow-Origin", "*")
-                .entity(message)
+                .entity("Shutting down")
                 .build();
+    }
+
+    @GET
+    @Path("lightboards")
+    @Produces(MediaType.APPLICATION_JSON)
+    public static Response getLightBoards() {
+        String message = "";
+        JSONObject json = new JSONObject();
+        JSONArray ja = new JSONArray();
+        for ( String s : lightboardIps) {
+            JSONObject innerJson = new JSONObject();
+            innerJson.put("ip", s);
+            try {
+                Get get = Http.get("http://" + s + ":8001/lightboard/system/name");
+                if (get.responseCode() == 200) {
+                    innerJson.put("status", "OK");
+                    innerJson.put("message", "'"+get.text()+"' is Alive");
+                } else {
+                    innerJson.put("status", "ERROR");
+                    innerJson.put("message", "ERROR (code "+get.responseCode());
+                }
+            } catch (Exception e) {
+                innerJson.put("status", "ERROR");
+                innerJson.put("message", "ERROR");
+            }
+            ja.add(innerJson);
+        }
+        json.put("boards", ja);
+        return Response.ok()
+                .header("Access-Control-Allow-Origin", "*")
+                .entity(json.toString())
+                .build();
+    }
+
+    @POST
+    @Path("update-all")
+    @Produces(MediaType.TEXT_PLAIN)
+    public static Response updateAllLightBoards() {
+        try {
+            pushMessagesToAllLightBoards();
+            pushTicketsToAllLightBoards();
+            return Response.ok()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .entity("All Boards Updated")
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .entity(e.getMessage())
+                    .build();
+        }
     }
 
     @GET
@@ -311,6 +151,5 @@ public class RegistrationResource {
                 .entity("Hello there!")
                 .build();
     }
-
 
 }

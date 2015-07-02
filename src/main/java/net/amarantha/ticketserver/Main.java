@@ -1,10 +1,8 @@
 package net.amarantha.ticketserver;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,8 +12,10 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static net.amarantha.ticketserver.webservice.RegistrationResource.*;
-import static net.amarantha.ticketserver.webservice.ShowerResource.*;
+import static net.amarantha.ticketserver.webservice.MessageResource.loadMessages;
+import static net.amarantha.ticketserver.webservice.MessageResource.pushMessagesToAllLightBoards;
+import static net.amarantha.ticketserver.webservice.ShowerResource.loadTicketNumbers;
+import static net.amarantha.ticketserver.webservice.ShowerResource.pushTicketsToAllLightBoards;
 
 public class Main {
 

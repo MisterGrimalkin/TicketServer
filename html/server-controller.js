@@ -1,15 +1,11 @@
-var baseUrl = null;
+var serverUrl = null;
 var port = "8001";
 var messagesSets = [];
 
-function onLoad(f) {
-    scan(f);
-}
-
-function scan(f) {
+function scanForServer(f) {
 
     boards = new Array();
-    baseUrl = "";
+    serverUrl = "";
 
     var detail = document.getElementById("detailPanel");
     detail.style.visibility = "hidden";
@@ -18,7 +14,7 @@ function scan(f) {
     while (panel.firstChild) {
         panel.removeChild(panel.firstChild);
     }
-    var p = document.createElement("H3");
+    var p = document.createElement("H4");
     var t = document.createTextNode("Searching for Server...");
     p.appendChild(t);
     panel.appendChild(p);
@@ -29,26 +25,70 @@ function scan(f) {
 
 }
 
+function getServerBoardStatus() {
+    var p = document.getElementById("boardResponses");
+    while ( p.firstChild ) {
+        p.removeChild(p.firstChild);
+    }
+    p.style.visibility = "hidden";
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+        if ( req.readyState==4 ) {
+            if ( req.status!=200 ) {
+                window.alert("Error " + req.status + ": " + req.responseText);
+            } else {
+                var boardResponses = document.getElementById("boardResponses");
+                boardResponses.style.visibility = "visible";
+                var json = JSON.parse(req.responseText);
+                var lbs = json.boards;
+                if ( lbs.length==0 ) {
+                    var t = document.createTextNode("No LightBoards are registered with the Ticket Server.");
+                    boardResponses.appendChild(t);
+                }
+                for ( var i=0; i<lbs.length; i++ ) {
+                    var lb = lbs[i];
+                    var div = document.createElement("DIV");
+                    div.style.float = "left";
+                    div.style.clear = "left";
+                    if ( lb.status==="OK" ) {
+                        div.style.color = "#00AA00";
+                    } else {
+                        div.style.color = "red";
+                    }
+                    var t = document.createTextNode(lb.ip + ": " + lb.message);
+                    div.appendChild(t);
+                    boardResponses.appendChild(div);
+                }
+            }
+        } else
+        if (req.readyState > 1 && req.status != 200 && req.status != 304) {
+            window.alert("Server responded with an error - please contact Barri.");
+        }
+    }
+    req.open("GET", "http://"+serverUrl+":8002/ticketserver/lightboards", true);
+    req.send();
+}
+
 function pingServer(ipLSB, f) {
 
     var req = new XMLHttpRequest();
     req.onreadystatechange = function() {
         if ( req.readyState==4 ) {
             if ( req.status==200 ) {
-                baseUrl = "192.168.0."+ipLSB;
+                serverUrl = "192.168.0."+ipLSB;
                 var panel = document.getElementById("ipAddress");
                 while (panel.firstChild) {
                     panel.removeChild(panel.firstChild);
                 }
                 var p = document.createElement("H3");
-                var t = document.createTextNode("Server IP: " + baseUrl);
+                var t = document.createTextNode("Server IP: " + serverUrl);
                 p.appendChild(t);
                 panel.appendChild(p);
                 var detail = document.getElementById("detailPanel");
                 detail.style.visibility = "visible";
                 f();
             } else {
-                if ( ipLSB==255 && baseUrl=="" ) {
+                if ( ipLSB==255 && serverUrl=="" ) {
                     var panel = document.getElementById("ipAddress");
                     while (panel.firstChild) {
                         panel.removeChild(panel.firstChild);
@@ -64,6 +104,55 @@ function pingServer(ipLSB, f) {
     req.open("GET", "http://192.168.0."+ipLSB+":8002/ticketserver/hello", true);
     req.send();
 
+}
+
+function clearRegistrations() {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+        if ( req.readyState==4 ) {
+            if ( req.status==200 ) {
+                scanForServer(function() { getServerBoardStatus(); });
+                scanLightBoards();
+            } else {
+                window.alert("Error Clearing Registrations");
+            }
+        }
+    }
+    req.open("POST", "http://"+serverUrl+":8002/ticketserver/clear-registrations", true);
+    req.send();
+}
+
+function refreshAll() {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+        if ( req.readyState==4 ) {
+            if ( req.status==200 ) {
+                scanForServer(function() { getServerBoardStatus(); });
+                scanLightBoards();
+            } else {
+                window.alert("Error Updating Boards");
+            }
+        }
+    }
+    req.open("POST", "http://"+serverUrl+":8002/ticketserver/update-all", true);
+    req.send();
+}
+
+function shutdownServer() {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+        if ( req.readyState==4 ) {
+            if ( req.status==200 ) {
+            setTimeout(function() {
+                location.reload();
+            },3000);
+            } else {
+                window.alert("Error Shutting Down Server");
+            }
+        }
+    }
+    req.open("POST", "http://"+serverUrl+":8002/ticketserver/shutdown", true);
+    req.send();
 }
 
 function loadMessages() {
@@ -96,7 +185,7 @@ function loadMessages() {
 //            loadBroadcastMessage();
         }
     }
-    req.open("GET", "http://"+baseUrl+":8002/ticketserver/messages", true);
+    req.open("GET", "http://"+serverUrl+":8002/ticketserver/messages", true);
     req.send();
 }
 
@@ -104,11 +193,11 @@ function loadBroadcastMessage() {
     var req = new XMLHttpRequest();
     req.onreadystatechange = function() {
         if ( req.readyState==4 && req.status==200 ) {
-        window.alert(req.responseText);
+            window.alert(req.responseText);
             var json = JSON.parse(req.responseText);
         }
     }
-    req.open("GET", "http://"+baseUrl+":8002/broadcast", true);
+    req.open("GET", "http://"+serverUrl+":8002/broadcast", true);
     req.send();
 }
 
@@ -126,8 +215,9 @@ function putMessages(id, name, messages) {
         div.style.border = "1px solid #AAAAAA";
         div.style.float = "left";
         div.style.margin = "5px";
-        div.style.background = "#DDDDDD";
+        div.style.background = "white";
         div.style.boxShadow = "2px 2px 2px #AAAAAA";
+        div.style.borderRadius = "5px";
 
         var p = document.createElement("INPUT");
         p.id = "input"+id+"-"+i;
@@ -136,6 +226,8 @@ function putMessages(id, name, messages) {
         p.style.float = "left";
         p.style.fontSize = "16px";
         p.style.padding = "4px";
+        p.style.border = "none";
+        p.style.borderRadius = "5px";
         p.value = msg;
         p.onchange = createUpdateMessageFunction(id, i);
 
@@ -145,6 +237,7 @@ function putMessages(id, name, messages) {
         removeBtn.style.float = "right";
         removeBtn.style.height = "40px";
         removeBtn.style.width = "15%";
+        removeBtn.style.borderRadius = "0px 5px 5px 0px"
         removeBtn.onclick = createRemoveMessageFunction(id, i);
 
         div.appendChild(p);
@@ -159,8 +252,9 @@ function putMessages(id, name, messages) {
     addDiv.style.border = "1px solid #AAAAAA";
     addDiv.style.float = "left";
     addDiv.style.margin = "5px";
-    addDiv.style.background = "#DDDDDD";
+    addDiv.style.background = "white";
     addDiv.style.boxShadow = "2px 2px 2px #AAAAAA";
+    addDiv.style.borderRadius = "5px";
 
     var addInput = document.createElement("INPUT");
     addInput.id = "addInput"+id;
@@ -169,6 +263,9 @@ function putMessages(id, name, messages) {
     addInput.style.float = "left";
     addInput.style.fontSize = "16px";
     addInput.style.padding = "4px";
+    addInput.style.border = "none";
+    addInput.style.borderRadius = "5px";
+
     addInput.onchange = createAddMessageFunction(id);
 
     var addBtn = document.createElement("BUTTON");
@@ -177,6 +274,7 @@ function putMessages(id, name, messages) {
     addBtn.style.float = "right";
     addBtn.style.height = "40px";
     addBtn.style.width = "15%";
+    addBtn.style.borderRadius = "0px 5px 5px 0px"
 
     addDiv.appendChild(addInput);
     addDiv.appendChild(addBtn);
@@ -186,11 +284,8 @@ function putMessages(id, name, messages) {
     var spacer = document.createElement("DIV");
     spacer.style.width = "100%";
     spacer.style.height = "40px";
-//    spacer.style.border = "1px solid #AAAAAA";
     spacer.style.float = "left";
     spacer.style.margin = "5px";
-//    spacer.style.background = "#DDDDDD";
-//    spacer.style.boxShadow = "2px 2px 2px #AAAAAA";
 
     panel.appendChild(spacer);
 }
@@ -200,13 +295,20 @@ function createAddMessageFunction(setId) {
         var field = document.getElementById("addInput"+setId);
         var text = field.value;
         if ( text!="" ) {
-        var req = new XMLHttpRequest();
+            var req = new XMLHttpRequest();
             req.onreadystatechange = function() {
                 if ( req.readyState==4 ) {
-                    loadMessages();
+                    if ( req.status!=200 ) {
+                        window.alert("Error " + req.status + ": " + req.responseText);
+                    } else {
+                        loadMessages();
+                    }
+                } else
+                if (req.readyState > 1 && req.status != 200 && req.status != 304) {
+                    window.alert("Server responded with an error - please contact Barri.");
                 }
             }
-            req.open("POST", "http://"+baseUrl+":8002/ticketserver/add-message?setId="+setId+"&text="+text, true);
+            req.open("POST", "http://"+serverUrl+":8002/ticketserver/add-message?setId="+setId+"&text="+text, true);
             req.send();
         }
     }
@@ -219,17 +321,17 @@ function createUpdateMessageFunction(setId, messageId) {
         var req = new XMLHttpRequest();
         req.onreadystatechange = function() {
             if ( req.readyState==4 ) {
-                if ( req.responseCode!=200 ) {
-                    window.alert("Error " + req/responseCode + ": " + req.responseText);
+                if ( req.status!=200 ) {
+                    window.alert("Error " + req.status + ": " + req.responseText);
                 } else {
                     loadMessages();
                 }
             } else
             if (req.readyState > 1 && req.status != 200 && req.status != 304) {
-                window.alert("Server responded with an error - please contact support.");
+                window.alert("Server responded with an error - please contact Barri.");
             }
         }
-        req.open("POST", "http://"+baseUrl+":8002/ticketserver/update-message?setId="+setId+"&msgId="+messageId+"&text="+text, true);
+        req.open("POST", "http://"+serverUrl+":8002/ticketserver/update-message?setId="+setId+"&msgId="+messageId+"&text="+text, true);
         req.send();
     }
 }
@@ -239,10 +341,17 @@ function createRemoveMessageFunction(setId, messageId) {
         var req = new XMLHttpRequest();
         req.onreadystatechange = function() {
             if ( req.readyState==4 ) {
-                loadMessages();
+                if ( req.status!=200 ) {
+                    window.alert("Error " + req.status + ": " + req.responseText);
+                } else {
+                    loadMessages();
+                }
+            } else
+            if (req.readyState > 1 && req.status != 200 && req.status != 304) {
+                window.alert("Server responded with an error - please contact Barri.");
             }
         }
-        req.open("POST", "http://"+baseUrl+":8002/ticketserver/remove-message?setId="+setId+"&msgId="+messageId, true);
+        req.open("POST", "http://"+serverUrl+":8002/ticketserver/remove-message?setId="+setId+"&msgId="+messageId, true);
         req.send();
     }
 }
@@ -251,11 +360,23 @@ function beginBroadcast() {
     var text = document.getElementById("broadcastMessageText").value;
     var interval = parseInt(document.getElementById("broadcastMessageInterval").value);
     if ( text!=="" ) {
-        var url = "http://"+baseUrl+":8002/ticketserver/broadcast";
+        var url = "http://"+serverUrl+":8002/ticketserver/broadcast";
         if ( !isNaN(interval) ) {
             url += "?interval="+interval;
         }
         var req = new XMLHttpRequest();
+        req.onreadystatechange = function() {
+            if ( req.readyState==4 ) {
+                if ( req.status!=200 ) {
+                    window.alert("Error " + req.status + ": " + req.responseText);
+                } else {
+                    loadMessages();
+                }
+            } else
+            if (req.readyState > 1 && req.status != 200 && req.status != 304) {
+                window.alert("Server responded with an error - please contact Barri.");
+            }
+        }
         req.open("POST", url, true);
         req.send(text);
     }
@@ -265,7 +386,19 @@ function cancelBroadcast() {
     document.getElementById("broadcastMessageText").value = "";
     document.getElementById("broadcastMessageInterval").value = "";
     var req = new XMLHttpRequest();
-    req.open("POST", "http://"+baseUrl+":8002/ticketserver/cancel-broadcast", true);
+        req.onreadystatechange = function() {
+            if ( req.readyState==4 ) {
+                if ( req.status!=200 ) {
+                    window.alert("Error " + req.status + ": " + req.responseText);
+                } else {
+                    loadMessages();
+                }
+            } else
+            if (req.readyState > 1 && req.status != 200 && req.status != 304) {
+                window.alert("Server responded with an error - please contact Barri.");
+            }
+        }
+    req.open("POST", "http://"+serverUrl+":8002/ticketserver/cancel-broadcast", true);
     req.send();
 }
 

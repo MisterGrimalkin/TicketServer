@@ -88,7 +88,7 @@ public class MessageBundle {
             return bundles;
         }
 
-        public MessageBundle getBundle(int id) {
+        public MessageBundle loadBundle(int id) {
             for ( MessageBundle bundle : bundles ) {
                 if ( bundle.getId()==id ) {
                     return bundle;

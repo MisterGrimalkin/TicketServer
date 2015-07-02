@@ -18,8 +18,11 @@ function loadTicketsFor(sex) {
             p.appendChild(t);
             nextTickets[sex] = parseInt(req.responseText);
         }
+        if (req.readyState > 1 && req.status != 200 && req.status != 304) {
+            window.alert("Error Loading Shower Tickers! Please contact Barri.");
+        }
     }
-    req.open("GET", "http://"+baseUrl+":8002/ticketserver/shower/"+sex, true);
+    req.open("GET", "http://"+serverUrl+":8002/ticketserver/shower/"+sex, true);
     req.send();
 }
 
@@ -39,10 +42,17 @@ function postTicketNumbers(sex, number) {
     var req = new XMLHttpRequest();
     req.onreadystatechange = function() {
         if ( req.readyState==4 ) {
+            if ( req.status!=200 ) {
+                window.alert("Server responded with error code " + req.status + "! Please contact Barri.");
+            }
+            loadTickets();
+        }
+        if (req.readyState > 1 && req.status != 200 && req.status != 304) {
+            window.alert("Server responded with an error. Please contact Barri.");
             loadTickets();
         }
     }
-    req.open("POST", "http://"+baseUrl+":8002/ticketserver/shower/"+sex+"?number="+number, true);
+    req.open("POST", "http://"+serverUrl+":8002/ticketserver/shower/"+sex+"?number="+number, true);
     req.send();
 }
 

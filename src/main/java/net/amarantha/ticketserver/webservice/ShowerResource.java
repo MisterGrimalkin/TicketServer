@@ -7,15 +7,10 @@ import org.javalite.http.Post;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static net.amarantha.ticketserver.webservice.RegistrationResource.lightboardIps;
 
@@ -24,8 +19,8 @@ public class ShowerResource {
 
     private static final String filename = "ticketnumbers.json";
 
-    private static int nextFemaleTicket = 1;
-    private static int nextMaleTicket = 2;
+    private static int nextFemaleTicket = 0;
+    private static int nextMaleTicket = 0;
 
     public static void loadTicketNumbers() {
         try {
@@ -65,18 +60,20 @@ public class ShowerResource {
     @POST
     @Path("female")
     public static Response setFemaleTicket(@QueryParam("number") int number) {
-        nextFemaleTicket = number;
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                saveTicketNumbers();
-                pushTicketsToAllLightBoards();
-            }
-        }, 2000);
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .entity("Updated")
-                .build();
+        try {
+            nextFemaleTicket = number;
+            saveTicketNumbers();
+            pushTicketsToAllLightBoards();
+            return Response.ok()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .entity("Updated")
+                    .build();
+        } catch ( Exception e ) {
+            return Response.serverError()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .entity(e.getMessage())
+                    .build();
+        }
     }
 
     @GET
@@ -92,29 +89,29 @@ public class ShowerResource {
     @POST
     @Path("male")
     public static Response setMaleTicket(@QueryParam("number") int number) {
-        nextMaleTicket = number;
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                saveTicketNumbers();
-                pushTicketsToAllLightBoards();
-            }
-        }, 2000);
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .entity("Updated")
-                .build();
+        try {
+            nextMaleTicket = number;
+            saveTicketNumbers();
+            pushTicketsToAllLightBoards();
+            return Response.ok()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .entity("Updated")
+                    .build();
+        } catch ( Exception e ) {
+            return Response.serverError()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .entity(e.getMessage())
+                    .build();
+        }
     }
 
-    public static void pushTicketsToAllLightBoards() {
+    public static void pushTicketsToAllLightBoards() throws Exception {
         for ( String ip : lightboardIps ) {
-            try {
-                Post post = Http.post("http://" + ip + ":8001/lightboard/ticket?female=" + nextFemaleTicket + "&male=" + nextMaleTicket, "");
-                if (post.responseCode() != 200) {
-                    System.out.println("ERROR Posting Shower Ticket Numbers to " + ip);
-                }
-            } catch ( Exception e ) {
-                System.out.println("ERROR Posting Shower Ticket Numbers to " + ip);
+            Post post = Http.post("http://" + ip + ":8001/lightboard/ticket?female=" + nextFemaleTicket + "&male=" + nextMaleTicket, "");
+            if (post.responseCode() != 200) {
+                String message = "Board " + ip + " could not be updated.";
+                System.out.println(message);
+                throw new Exception(message);
             }
         }
     }

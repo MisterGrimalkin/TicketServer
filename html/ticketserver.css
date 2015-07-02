@@ -1,0 +1,52 @@
+h1 {
+    text-align: center;
+}
+
+h2 {
+    text-align: center;
+}
+
+h3 {
+    text-align: center;
+}
+
+.jumbotron {
+    background: #00AA99;
+    color: white;
+    text-align: center;
+}
+.btn-success {
+    border-radius: 5px;
+    font-family: courier;
+    height: 40px;
+}
+
+.btn-warning {
+    border-radius: 5px;
+    height: 40px;
+    font-family: courier;
+}
+
+.btn-danger {
+    border-radius: 5px;
+    height: 40px;
+    font-family: courier;
+}
+
+.btn-primary {
+    border-radius: 5px;
+    height: 40px;
+    font-family: courier;
+}
+
+.shower-block {
+    font-size:50px;
+    font-family: courier;
+    background: #008877;
+    font-weight: bold;
+    color: white;
+    width: 200px;
+    margin: auto;
+    border-radius: 20px;
+}
+

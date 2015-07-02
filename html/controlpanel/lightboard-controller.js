@@ -4,7 +4,7 @@ var boards = ["NONE"];
 var currentScene;
 
 function onLoad() {
-    scan();
+    scanLightBoards();
     setInterval(function() { updateCurrentScene();}, 2000);
 }
 
@@ -14,7 +14,7 @@ function onLoad() {
 // to LightBoards       //
 //////////////////////////
 
-function scan() {
+function scanLightBoards() {
 
     boards = new Array();
     baseUrl = "";
@@ -325,10 +325,24 @@ function shutdown() {
     var req = new XMLHttpRequest();
     req.onreadystatechange = function() {
         if (req.readyState==4 && req.status==200 ) {
-            scan();
+            setTimeout(function() {
+                location.reload();
+            }, 3000);
         }
     }
     req.open("POST", url("system/shutdown"), true);
+    req.send();
+}
+
+function resetServerConnection() {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+        if (req.readyState==4 && req.status==200 ) {
+            scanForServer(function() { getServerBoardStatus(); });
+            scanLightBoards();
+        }
+    }
+    req.open("POST", url("system/ticket-server"), true);
     req.send();
 }
 
